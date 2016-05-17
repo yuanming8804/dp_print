@@ -37,40 +37,34 @@ public class QRCodeTest {
 		JSONObject json = new JSONObject();
 		json.put("zxing", "https://github.com/zxing/zxing/tree/zxing-3.0.0/javase/src/main/java/com/google/zxing");
 		json.put("author", "shiky");
-		String content = json.toJSONString();	// 内容
+		String content = json.toJSONString();
 		int width = 200;
 		int height = 200;
 		String format = "png";
 		Map<EncodeHintType, Object> hints = new HashMap<EncodeHintType, Object>();
 		hints.put(EncodeHintType.CHARACTER_SET, "UTF-8");
 		BitMatrix bitMatrix = new MultiFormatWriter().encode(content, 
-				BarcodeFormat.QR_CODE, width, height, hints);	// 生成矩阵
+				BarcodeFormat.QR_CODE, width, height, hints);
 		Path path = FileSystems.getDefault().getPath(filePath, fileName);
-		MatrixToImageWriter.writeToPath(bitMatrix, format, path); 	// 输出图像
-		System.out.println("输出成功");
+		MatrixToImageWriter.writeToPath(bitMatrix, format, path); 
 	}
-	
-	/** 
-     * 解析图像 
-     */  
-    @Test  
+
+	@Test  
     public void testDecode() {  
-        String filePath = "E://zxing.png";  
-        BufferedImage image;  
-        try {  
-            image = ImageIO.read(new File(filePath));  
+        String filePath = "E://zxing.png";
+        BufferedImage image;
+        try {
+            image = ImageIO.read(new File(filePath));
             LuminanceSource source = new BufferedImageLuminanceSource(image);  
             Binarizer binarizer = new HybridBinarizer(source);  
             BinaryBitmap binaryBitmap = new BinaryBitmap(binarizer);  
             Map<DecodeHintType, Object> hints = new HashMap<DecodeHintType, Object>();  
             hints.put(DecodeHintType.CHARACTER_SET, "UTF-8");  
-            Result result = new MultiFormatReader().decode(binaryBitmap, hints);// 对图像进行解码  
+            Result result = new MultiFormatReader().decode(binaryBitmap, hints);
             JSONObject content = JSONObject.parseObject(result.getText());  
-            System.out.println("图片中内容：  ");  
-            System.out.println("author： " + content.getString("author"));  
-            System.out.println("zxing：  " + content.getString("zxing"));  
-            System.out.println("图片中格式：  ");  
-            System.out.println("encode： " + result.getBarcodeFormat());  
+            System.out.println("author" + content.getString("author"));  
+            System.out.println("zxing" + content.getString("zxing"));  
+            System.out.println("encode" + result.getBarcodeFormat());  
         } catch (IOException e) {  
             e.printStackTrace();  
         } catch (NotFoundException e) {  

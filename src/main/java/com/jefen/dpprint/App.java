@@ -15,6 +15,7 @@ import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -152,26 +153,28 @@ public class App extends JFrame
 	// 无国标码[标准]
 	private void print_1_0() {
 		// TODO Auto-generated method stub
-		BasePrint bpFrame = new BasePrint();
-		bpFrame.setVisible(true);
 		String jian = (String) jianComboBox.getSelectedItem();
+		
+		Map dpdata = null;
 		try {
-			initStyleData(skuInputText.getText(), jian);
+			dpdata = initStyleData(skuInputText.getText(), jian);
 		} catch (SQLException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
+		BasePrint bpFrame = new BasePrint(dpdata);
+		bpFrame.setVisible(true);
 	}    
 	
-	
-	
 	// 初始化款式数据
-	private void initStyleData(String styleId, String jian) throws SQLException {
+	private Map initStyleData(String styleId, String jian) throws SQLException {
+		Map map = new HashMap();
 		// 获取颜色数据
 		List<String> styleColorList = getStyleColor(styleId);
 		for (String colorId : styleColorList) {
-			getStyleSize(styleId, colorId);
+			map.put(colorId, getStyleSize(styleId, colorId));
 		}
+		return map;
 	}
 
 	// 判断款号是否存在，如果存在于模板表则返回模板ID
@@ -208,7 +211,7 @@ public class App extends JFrame
 			re.put("tempId", null);
 		}
 		return re;
-	}
+	} 
 	
 	// 返回款式颜色
 	public List<String> getStyleColor(String styleId) throws SQLException {
@@ -221,11 +224,11 @@ public class App extends JFrame
 		while (rs.next()) {
 			re.add(rs.getString("ColorID"));
 		}
-		return re;
+		return re;	
 	}
 	
 	// 根据款式颜色返回尺码信息
-	public void getStyleSize(String styleId, String colorId) throws SQLException {
+	public List getStyleSize(String styleId, String colorId) throws SQLException {
 		PreparedStatement pStmt;
 		String sql = "Select a.*, IsNull(D.SL,0)SL, D.IP "
 				+ "From Template as a "
@@ -238,27 +241,17 @@ public class App extends JFrame
 		pStmt.setString(1, styleId);
 		pStmt.setString(2, colorId);
 		ResultSet rs = pStmt.executeQuery();
-		int rowCount = 1;
+		ResultSetMetaData md = rs.getMetaData(); //得到结果集(rs)的结构信息，比如字段数、字段名等   
+        int columnCount = md.getColumnCount(); //返回此 ResultSet 对象中的列数   
+		List rowList = new ArrayList();
 		while (rs.next()) {
-			rs.getString(rowCount);
-			rowCount++; 
+			Map tempDict = new HashMap(columnCount);
+			for (int i = 1; i <= columnCount; i++) {   
+				tempDict.put(md.getColumnName(i), rs.getObject(i));   
+			}   
+			rowList.add(tempDict);
 		}
-//		// 取到字段
-//		Fields = [Field[0] for Field in self.cur.description]
-//		
-//		// 处理数据
-//		RowList = []
-//		for row in self.cur: # 此方法可以不用使用 self.cur.fetchall() 读取数据
-//		    TempDict = {}
-//		    for index,Field in enumerate(Fields):
-//		        if Field in ("Brand","P_Name","DJ","LeiBie","Other1","Other2","Other3","Other4","Other5","Safe1","Safe2"):
-//		            Val = zh_de(row[index])
-//		        else:
-//		            Val = row[index]
-//		        TempDict[Field.__str__()] = Val
-//		    RowList.append(TempDict)
-//		
-//		return RowList;
+		return rowList;
 	}
 
 //	public void caretUpdate(CaretEvent e) {
